@@ -56,7 +56,7 @@ python yolov5/train.py --img 640 --batch 16 --epochs 50 --data data.yaml --weigh
 
 ## 🔥 Results & Performance
 - **Mean Average Precision (mAP):** Achieved ~94.75% accuracy on the validation set(mAP@50).
-- **Inference Speed:** ~XX FPS on an RTX 3060.
+- **Inference Speed:** ~55+ FPS on an RTX 4050.
 - **Training Logs:** Available in the `runs/` directory.
 
 ## 🚀 Future Improvements
