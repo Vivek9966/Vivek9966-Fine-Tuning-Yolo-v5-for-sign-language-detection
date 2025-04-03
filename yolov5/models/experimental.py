@@ -91,11 +91,16 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
 
     Example inputs: weights=[a,b,c] or a single model weights=[a] or weights=a.
     """
+    import pathlib
+    temp = pathlib.PosixPath
     from models.yolo import Detect, Model
 
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
-        ckpt = torch.load(attempt_download(w), map_location="cpu")  # load
+        temp = pathlib.PosixPath
+        pathlib.PosixPath = pathlib.WindowsPath
+        ckpt = torch.load(attempt_download(w), map_location="cpu")
+        pathlib.PosixPath = temp # load
         ckpt = (ckpt.get("ema") or ckpt["model"]).to(device).float()  # FP32 model
 
         # Model compatibility updates
