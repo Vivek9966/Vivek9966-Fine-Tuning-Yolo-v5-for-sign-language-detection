@@ -10,7 +10,7 @@ import warnings
 import zipfile
 from collections import OrderedDict, namedtuple
 from copy import copy
-from pathlib import Path
+import os
 from urllib.parse import urlparse
 
 import cv2
@@ -523,16 +523,16 @@ class DetectMultiBackend(nn.Module):
             from openvino.runtime import Core, Layout, get_batch
 
             core = Core()
-            if not Path(w).is_file():  # if not *.xml
-                w = next(Path(w).glob("*.xml"))  # get *.xml file from *_openvino_model dir
-            ov_model = core.read_model(model=w, weights=Path(w).with_suffix(".bin"))
+            if not os.path.normpath(w).is_file():  # if not *.xml
+                w = next(os.path.normpath(w).glob("*.xml"))  # get *.xml file from *_openvino_model dir
+            ov_model = core.read_model(model=w, weights=os.path.normpath(w).with_suffix(".bin"))
             if ov_model.get_parameters()[0].get_layout().empty:
                 ov_model.get_parameters()[0].set_layout(Layout("NCHW"))
             batch_dim = get_batch(ov_model)
             if batch_dim.is_static:
                 batch_size = batch_dim.get_length()
             ov_compiled_model = core.compile_model(ov_model, device_name="AUTO")  # AUTO selects best available device
-            stride, names = self._load_metadata(Path(w).with_suffix(".yaml"))  # load metadata
+            stride, names = self._load_metadata(os.path.normpath(w).with_suffix(".yaml"))  # load metadata
         elif engine:  # TensorRT
             LOGGER.info(f"Loading {w} for TensorRT inference...")
             import tensorrt as trt  # https://developer.nvidia.com/nvidia-tensorrt-download
@@ -650,7 +650,7 @@ class DetectMultiBackend(nn.Module):
             check_requirements("paddlepaddle-gpu" if cuda else "paddlepaddle>=3.0.0")
             import paddle.inference as pdi
 
-            w = Path(w)
+            w = os.path.normpath(w)
             if w.is_dir():
                 model_file = next(w.rglob("*.json"), None)
                 params_file = next(w.rglob("*.pdiparams"), None)
@@ -799,13 +799,13 @@ class DetectMultiBackend(nn.Module):
         if not is_url(p, check=False):
             check_suffix(p, sf)  # checks
         url = urlparse(p)  # if url may be Triton inference server
-        types = [s in Path(p).name for s in sf]
+        types = [s in os.path.basename(os.path.normpath(p)) for s in sf]
         types[8] &= not types[9]  # tflite &= not edgetpu
         triton = not any(types) and all([any(s in url.scheme for s in ["http", "grpc"]), url.netloc])
         return types + [triton]
 
     @staticmethod
-    def _load_metadata(f=Path("path/to/meta.yaml")):
+    def _load_metadata(f=os.path.normpath("path/to/meta.yaml")):
         """Loads metadata from a YAML file, returning strides and names if the file exists, otherwise `None`."""
         if f.exists():
             d = yaml_load(f)
@@ -861,7 +861,7 @@ class AutoShape(nn.Module):
         Supports various formats including file, URI, OpenCV, PIL, numpy, torch.
         """
         # For size(height=640, width=1280), RGB images example inputs are:
-        #   file:        ims = 'data/images/zidane.jpg'  # str or PosixPath
+        #   file:        ims = 'data/images/zidane.jpg'  # str or Posixos.path.normpath
         #   URI:             = 'https://ultralytics.com/images/zidane.jpg'
         #   OpenCV:          = cv2.imread('image.jpg')[:,:,::-1]  # HWC BGR to RGB x(640,1280,3)
         #   PIL:             = Image.open('image.jpg') or ImageGrab.grab()  # HWC x(640,1280,3)
@@ -884,12 +884,12 @@ class AutoShape(nn.Module):
             shape0, shape1, files = [], [], []  # image and inference shapes, filenames
             for i, im in enumerate(ims):
                 f = f"image{i}"  # filename
-                if isinstance(im, (str, Path)):  # filename or uri
+                if isinstance(im, (str, os.path.normpath)):  # filename or uri
                     im, f = Image.open(requests.get(im, stream=True).raw if str(im).startswith("http") else im), im
                     im = np.asarray(exif_transpose(im))
                 elif isinstance(im, Image.Image):  # PIL Image
                     im, f = np.asarray(exif_transpose(im)), getattr(im, "filename", f) or f
-                files.append(Path(f).with_suffix(".jpg").name)
+                files.append(os.path.normpath(f).with_suffix(".jpg").name)
                 if im.shape[0] < 5:  # image in CHW
                     im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)
                 im = im[..., :3] if im.ndim == 3 else cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)  # enforce 3ch input
@@ -946,7 +946,7 @@ class Detections:
         self.t = tuple(x.t / self.n * 1e3 for x in times)  # timestamps (ms)
         self.s = tuple(shape)  # inference BCHW shape
 
-    def _run(self, pprint=False, show=False, save=False, crop=False, render=False, labels=True, save_dir=Path("")):
+    def _run(self, pprint=False, show=False, save=False, crop=False, render=False, labels=True, save_dir=os.path.normpath("")):
         """Executes model predictions, displaying and/or saving outputs with optional crops and labels."""
         s, crops = "", []
         for i, (im, pred) in enumerate(zip(self.ims, self.pred)):
