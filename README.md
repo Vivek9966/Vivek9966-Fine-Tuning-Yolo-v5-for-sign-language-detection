@@ -32,7 +32,7 @@ pip install -r yolov5/requirements.txt
 ### 3️⃣ Run Inference on Webcam
 To test the model in real time using a webcam:
 ```bash
-python yolov5/detect.py --weights yolov5/runs/train/results/weights/best.pt --source 0
+python yolov5/detect.py --weights yolov5/runs/train/results_1/weights/best.pt --source 0
 ```
 
 ### 4️⃣ Train the Model (Optional)
