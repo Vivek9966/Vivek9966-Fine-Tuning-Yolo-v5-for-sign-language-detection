@@ -28,6 +28,10 @@ Ensure you have Python 3.8+ and install the required dependencies:
 ```bash
 pip install -r yolov5/requirements.txt
 ```
+come out of yolo dir
+```bash
+cd ../
+```   
 
 ### 3️⃣ Run Inference on Webcam
 To test the model in real time using a webcam:
