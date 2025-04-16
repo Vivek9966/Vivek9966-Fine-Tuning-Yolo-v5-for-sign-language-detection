@@ -19,7 +19,7 @@ This repository contains the fine-tuned YOLOv5 model for detecting sign language
 
 ### 1️⃣ Clone the Repository
 ```bash
- git clone https://github.com/vivek9966/Fine-Tuning-Yolo-v5-for-sign-language-detection.git
+ git clone https://github.com/Vivek9966/Vivek9966-Fine-Tuning-Yolo-v5-for-sign-language-detection.git
  cd Fine-Tuning-Yolo-v5-for-sign-language-detection
 ```
 
